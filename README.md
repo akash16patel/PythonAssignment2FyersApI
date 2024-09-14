@@ -13,7 +13,7 @@ Obtain the expiry dates for option’s chains.
   ## Install Required Depencies from requirement.txt 
   ## i have implemented Logger so if any issue check my fyersAPI.log and fyersrequest.log 
   ## i am providing some snap shot to get clear understanding 
-      ![image](https://github.com/user-attachments/assets/26313bc4-3494-428a-ba5e-a0c0f43c587d)
+![Screenshot 2024-09-14 214124](https://github.com/user-attachments/assets/44ce8810-c451-4bad-a84e-1cc816b6ca7c)
 
       
 ### Method Implimented:
