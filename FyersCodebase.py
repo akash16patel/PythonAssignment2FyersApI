@@ -23,57 +23,57 @@ class FyersCodebase:
             response.raise_for_status()
             with open(self.instruemnt_Path,'wb') as w:
                 w.write(response.content)
-            self.df=pd.read_csv("Dependency_File/all_instrument.csv") #
+            self.df=pd.read_csv("Dependency_File/all_instrument.csv") # It fetch instruments file from folder to make use in option chain
             self.df.columns = ['token', 'symbol_desc', 'tick_size', 'lot_size', 'price_step', 'na_1',
                                'timing', 'expiry_date', 'expiry_epoch', 'trading_symbol', 'min_lot_size',
                                'max_lot_size', 'token_number', 'underlying', 'strike_token', 'strike_price',
-                               'option_type', 'underlying_token', 'na_2', 'oi', 'oi_change']
-            self.df.to_csv('Dependency_File/all_instrument_with_header.csv', index=False)
+                               'option_type', 'underlying_token', 'na_2', 'oi', 'oi_change'] # here i Add headers in the instruments data frame as it is headerless to make use in ATM,OTM,ITM
+            self.df.to_csv('Dependency_File/all_instrument_with_header.csv', index=False) # here i saved this for refernce
         except(rq.RequestException,pd.errors.EmptyDataError) as e:
             self.logger.error(f" failed to load instrument data:{e}")
             raise
 
-    def _handle_response(self,response,expected_code=200):
+    def _handle_response(self,response,expected_code=200): # making method to chekc some API response error as fyers API before processding next
         if response.get('code')!=expected_code:
             self.logger.error(f"API call failed to response:{response}")
             raise ValueError("Api call failed")
         return response
 
-    def map_expiry_index(self,expiry_index,unique_expiry):
+    def map_expiry_index(self,expiry_index,unique_expiry):# this method is helper method for assigning index in expiry_Epoch which help to fetch unique expiry for given underlying and script_Type
         if 0<=expiry_index <len(unique_expiry):
             return unique_expiry[expiry_index]
         else:
             raise ValueError("Invalid expiry index provided")
-    def get_data_for_single_script(self,exchange,name,call_type):
+    def get_data_for_single_script(self,exchange,name,call_type): # this method provide last trading price ,ohlc and quote as per input
         data={
             "symbol":f"{exchange}:{name}",
             "ohlcv_flag": "1"
 
-        }
+        } #this data set is for ltp
         dataquote={
             "symbols":f"{exchange}:{name}"
-        }
+        } # this for dataquote
         try:
             if call_type.lower() == "quote":
-                response=self.fyers.quote(data=dataquote)
+                response=self.fyers.quote(data=dataquote) # using fyers quote method it will return required data
                 self._handle_response(response)
                 return response['d']['v']
             else:
-                response=self.fyers.depth(data=data)
+                response=self.fyers.depth(data=data) # for ltp and ohlc i used depth method of fyersAPi
                 if response['s']=="ok":
                     if call_type.lower()=="ohlc":
-                        return{call: response['d'][f'{exchange}:{name}'][call] for call in ('o','h','l','c')}
+                        return{call: response['d'][f'{exchange}:{name}'][call] for call in ('o','h','l','c')} # returning filter data for ohlc as it o:"open",h:"High",l:"Low",c"close we get all value respectively
                     else:
                          return response['d'][f'{exchange}:{name}'][call_type]
         except Exception as e:
             self.logger.error(f"failed to get data for script {name}: {e} ")
             raise
 
-    def place_order(self,order_type,exchange,symbol,transaction_type,quantity,product_type,trigger_price=0):
+    def place_order(self,order_type,exchange,symbol,transaction_type,quantity,product_type,trigger_price=0): # this method is for placing differt type of order
         try:
-            get_order_type=lambda ot:{"limit":1,"market":2,"stoporder":3,"Stoplimit":4}.get(ot)
+            get_order_type=lambda ot:{"limit":1,"market":2,"stoporder":3,"Stoplimit":4}.get(ot) # mapping of ordertype is done as Api get value in integer for order type
             order_type=get_order_type(order_type)
-            if transaction_type.upper()=="BUY":
+            if transaction_type.upper()=="BUY": # for transction type like buy or sale ,this also accept 1(Buy) or -1(SEll)
                 transaction_type=1
             else:
                 transaction_type=-1
@@ -93,9 +93,9 @@ class FyersCodebase:
                 "offlineOrder": False,
                 "orderTag": "tag1"
                                     }
-            response=self.fyers.place_order(data=data)
+            response=self.fyers.place_order(data=data)# this fyer api call place order in live market through api
             self.logger.info(f"order place with id:{response['id']}")
-            return response['id']
+            return response['id'] # here i am returning only order id as per requiremenmt of task
         except Exception as e:
             self.logger.error(F"faild to place order :{e}")
             raise
