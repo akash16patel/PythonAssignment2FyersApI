@@ -6,24 +6,24 @@ import requests as rq
 from datetime import datetime
 from collections import defaultdict
 
-
+# Created this class as Wrapper class for FyersAPi
 class FyersCodebase:
-    def __init__(self,client_id,access_token,logger=None):
+    def __init__(self,client_id,access_token,logger=None): # in this constructor i assigned client id and accesstoken which helps to get connection with fyers API
         self.client_id=client_id
         self.access_token=access_token
-        self.fyers=FM.FyersModel(client_id=self.client_id,is_async=False,token=self.access_token)
-        self.logger=logger if logger else lg.getLogger("fyers_logger")
-        self.instrument_url="https://public.fyers.in/sym_details/NSE_FO.csv"
-        self.instruemnt_Path="Dependency_File/all_instrument.csv"
+        self.fyers=FM.FyersModel(client_id=self.client_id,is_async=False,token=self.access_token) # here i am setting connection with fyersAPI
+        self.logger=logger if logger else lg.getLogger("fyers_logger") # this logger help to monitor any changes API fail or success call response
+        self.instrument_url="https://public.fyers.in/sym_details/NSE_FO.csv" # this is instrument.csv link provided by fyers as master symbol format
+        self.instruemnt_Path="Dependency_File/all_instrument.csv" # instrument file save path
         self.df=None
-        self._load_instruments()
+        self._load_instruments() # created a load instrument method to load latest instrument  file created in dependencyfile directory
     def _load_instruments(self):
         try:
             response=rq.get(self.instrument_url)
             response.raise_for_status()
             with open(self.instruemnt_Path,'wb') as w:
                 w.write(response.content)
-            self.df=pd.read_csv("Dependency_File/all_instrument.csv")
+            self.df=pd.read_csv("Dependency_File/all_instrument.csv") #
             self.df.columns = ['token', 'symbol_desc', 'tick_size', 'lot_size', 'price_step', 'na_1',
                                'timing', 'expiry_date', 'expiry_epoch', 'trading_symbol', 'min_lot_size',
                                'max_lot_size', 'token_number', 'underlying', 'strike_token', 'strike_price',
