@@ -223,26 +223,4 @@ class FyersCodebase:
         except Exception as e:
             self.logger.error(f"failed to get expiry dates : {e}")
 
-# if __name__=="__main__":
-#     logger=lg.getLogger("fyers_logger")
-#     with open('access.txt','r') as access:
-#         access_token=access.read()
-#     broker=FyersCodebase(client_id="FK9E8YPI2C-100",access_token=access_token,logger=logger)
-#
-#     ltp=broker.get_data_for_single_script(exchange="NSE",name="SBIN-EQ",call_type="ltp")
-#     print(f"LTP  is {ltp}")
-#     # Place order: parameters option provided by fyers API-->
-#     # ordertype
-#     # {1 => Limit Order 2 => Market Order 3 => Stop Order (SL-M) 4 => Stoplimit Order (SL-L)},producttype {"INTRADAY","CNC","CO","BO","MARGIN","ALL". Eg: ["INTRADAY","CNC"]},transcation type(side){"BUY","SELL"},
-#     order_id=broker.place_order(order_type="market",exchange="NSE",symbol="SBIN-EQ",transaction_type="BUY",quantity=1,product_type="CNC")
-#     print(f"order_id = {order_id}")
-#     excuted_time,excuted_price,order_status = broker.get_order_details()
-#     print(f"executed time={excuted_time},executed price={excuted_price},order status={order_status}")
-#     atm=broker.get_atm(ltp=ltp,underlying="SBIN",expiry=0,script_type="CE")
-#     print(f"[]atm=={atm}")
-#     itm=broker.get_itm(ltp=ltp,underlying='SBIN',expiry=0,multiplier=5,script_type='CE')
-#     print(f"itm =={itm}")
-#     otm=broker.get_otm(ltp=ltp,underlying='SBIN',expiry=0,multiplier=5,script_type="CE")
-#     print(f"otm=={otm}")
-#     expiry=broker.get_expiries(scripname='NIFTY50-INDEX',exchange='NSE',expiry_type='three')
-#     print(f"expiry= {expiry}")
+
