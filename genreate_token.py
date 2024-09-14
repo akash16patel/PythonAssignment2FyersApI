@@ -11,7 +11,7 @@ url = 'https://api-t1.fyers.in/api/v3/validate-refresh-token'
 headers={
     'Content-Type':'application/json',
 }
-with open('refresh_token.txt', 'r') as refresh:
+with open('Dependency_File/refresh_token.txt', 'r') as refresh:
     refresh_token = refresh.read()
 data={
     "grant_type": "refresh_token",
@@ -23,5 +23,5 @@ response=requests.post(url,headers=headers,data=json.dumps(data))
 response=response.json()
 print(response['access_token'])
 access_token=response['access_token']
-with open('access.txt', 'w') as w:
+with open('Dependency_File/access.txt', 'w') as w:
     w.write(access_token)
