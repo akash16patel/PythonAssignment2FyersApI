@@ -100,35 +100,35 @@ class FyersCodebase:
             self.logger.error(F"faild to place order :{e}")
             raise
 
-    def get_order_details(self):
+    def get_order_details(self): #This method return last order details
         try:
-            response=self.fyers.orderbook()
+            response=self.fyers.orderbook() # using fyersAPi method ordebook to get all order details
             if response['s'] !="ok":
                 return "please check Fyers Api log for details"
-            length=len(response['orderBook'])
+            length=len(response['orderBook']) # Calculating length of list of order to return last order ,it use as index to return last order detail
 
-            response=response['orderBook'][length-1]
+            response=response['orderBook'][length-1] # here i am returning last order data
             status=response['status']
-            get_status=lambda st:{1:"Canceled",2:"Traded/Filled",3:"NOt Used Currently",4:"Transit",5:"Rejected",6:"Pending",7:"Expired"}.get(st)
+            get_status=lambda st:{1:"Canceled",2:"Traded/Filled",3:"NOt Used Currently",4:"Transit",5:"Rejected",6:"Pending",7:"Expired"}.get(st) # using lambda function mapping status of  order for better readability as staus is in integer like ,1,2,or 3 etc. so i just mapped as per APi Docs.
             status=get_status(status)
-            return response['orderDateTime'],response['tradedPrice'],status
+            return response['orderDateTime'],response['tradedPrice'],status # returning required data as per task
         except Exception as e:
             self.logger.error(f"Failed to get order details:{e}")
             raise
 
 
 
-    def get_atm(self,ltp,underlying,expiry,script_type):
+    def get_atm(self,ltp,underlying,expiry,script_type): # this Method is to get ATM(At-the-money) of Optionchain
 
        try:
-            required_df=self.df[self.df['underlying']==underlying]
-            expiry=self.map_expiry_index(expiry,sorted(required_df['expiry_epoch'].unique()))
-            required_df=required_df[(required_df['expiry_epoch']==expiry )&(required_df['option_type']==script_type.upper())]
+            required_df=self.df[self.df['underlying']==underlying] # here i am filtering data which is fetch from instruments file and added headername in dataframe,based on underlying input by user it just filter the data frame keep all data of only underlying symbol
+            expiry=self.map_expiry_index(expiry,sorted(required_df['expiry_epoch'].unique())) # here sorting of expiry_epoch is done as unique expiry we got and also assigning index as 0,1,2 etc for all unique expiry for the given underlying .
+            required_df=required_df[(required_df['expiry_epoch']==expiry )&(required_df['option_type']==script_type.upper())] #Now more filter is applied based on expiry and option type ,it gives only data which matching expiry and option for input underlying
             if required_df.empty:
                 return "No matching data for the given expiry or script_Type"
-            required_df=required_df.sort_values(by='strike_price')
-            required_df['diff']=abs(required_df['strike_price']-ltp)
-            atm=required_df.loc[required_df['diff'].idxmin()]
+            required_df=required_df.sort_values(by='strike_price') # now here i sorted the dataframe based on strike price
+            required_df['diff']=abs(required_df['strike_price']-ltp) # here as per ATM i am using difference of strike price and ltp to get more filtered data
+            atm=required_df.loc[required_df['diff'].idxmin()] # here making table for required data to return trading symbol of for ATM
             return atm['trading_symbol']
        except Exception as e:
             self.logger.error(f"failed to get atm option:{e}")
