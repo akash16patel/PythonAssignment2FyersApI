@@ -139,23 +139,23 @@ class FyersCodebase:
 
 
 
-    def get_itm(self,ltp,underlying,expiry,multiplier,script_type):
+    def get_itm(self,ltp,underlying,expiry,multiplier,script_type): # this Method is to get ITM(In-The-Money) of option chain
         try:
-            required_df = self.df[self.df['underlying'] == underlying]
-            expiry = self.map_expiry_index(expiry, sorted(required_df['expiry_epoch'].unique()))
+            required_df = self.df[self.df['underlying'] == underlying] # here i am filtering data which is fetch from instruments file and added headername in dataframe,based on underlying input by user it just filter the data frame keep all data of only underlying symbol
+            expiry = self.map_expiry_index(expiry, sorted(required_df['expiry_epoch'].unique()))  # here sorting of expiry_epoch is done as unique expiry we got and also assigning index as 0,1,2 etc for all unique expiry for the given underlying .
 
-            required_df = required_df[(required_df['expiry_epoch'] == expiry) & (required_df['option_type'] == script_type.upper())]
+            required_df = required_df[(required_df['expiry_epoch'] == expiry) & (required_df['option_type'] == script_type.upper())] #Now more filter is applied based on expiry and option type ,it gives only data which matching expiry and option for input underlying
             if required_df.empty:
                 return "No matching data for the given expiry and script_Type"
-            required_df=required_df.sort_values(by="strike_price")
+            required_df=required_df.sort_values(by="strike_price") # now here i sorted the dataframe based on strike price
 
             if script_type.upper()=='CE':
-                itm=required_df[required_df['strike_price']<=ltp]
+                itm=required_df[required_df['strike_price']<=ltp] # As per definition of ITM here i just filtered the data as per strikeprice and ltp
             else:
                 itm=required_df[required_df['strike_price']>=ltp]
             if itm.empty:
                 return "No ITM option Found"
-            itm_Mul=itm.iloc[-multiplier] if len(itm)>=multiplier else itm.iloc[-1]
+            itm_Mul=itm.iloc[-multiplier] if len(itm)>=multiplier else itm.iloc[-1] # here multplier are used to find as depth of the data
 
             return itm_Mul['trading_symbol']
         except Exception as e:
@@ -163,8 +163,10 @@ class FyersCodebase:
 
     def get_otm(self,ltp,underlying,expiry,multiplier,script_type):
         try:
-            required_df = self.df[self.df['underlying'] == underlying]
-            expiry = self.map_expiry_index(expiry, sorted(required_df['expiry_epoch'].unique()))
+            required_df = self.df[self.df['underlying'] == underlying] # here i am filtering data which is fetch from instruments file and added headername in dataframe,based on underlying input by user it just filter the data frame keep all data of only underlying symbol
+
+            expiry = self.map_expiry_index(expiry, sorted(required_df['expiry_epoch'].unique())) # here sorting of expiry_epoch is done as unique expiry we got and also assigning index as 0,1,2 etc for all unique expiry for the given underlying .
+
 
             required_df = required_df[(required_df['expiry_epoch'] == expiry) & (required_df['option_type'] == script_type.upper())
                                   ]
@@ -185,26 +187,26 @@ class FyersCodebase:
             self.logger.error(f"no otm option found {e}")
             raise
 
-    def get_expiries(self,scripname,exchange,expiry_type):
+    def get_expiries(self,scripname,exchange,expiry_type): # this method gives expires of given scripname as per expiry_type from option chain
         try:
             data={
                 "symbol":f"{exchange}:{scripname}",
                 "strikecount":2,
-                "timestamp": ""}
+                "timestamp": ""} #  request data  as per fyersAPi
             response=self.fyers.optionchain(data=data)
             self._handle_response(response)
 
 
-            expiry=response['data']
+            expiry=response['data'] # here i am filtering data where expiry dates are available
 
-            expiry_dates=expiry['expiryData']
-            group_expiry=defaultdict(list)
-            for item in expiry_dates:
+            expiry_dates=expiry['expiryData'] # now only expiry list are filtered here
+            group_expiry=defaultdict(list) # here i declare a dict for mapping expiry based on same months and year
+            for item in expiry_dates: # this loop will filtered the same months and year
                 date=datetime.strptime(item['date'],"%d-%m-%Y")
                 month_year=date.strftime("%m-%Y")
                 group_expiry[month_year].append(item)
 
-            sorted_group_expiry={ge:group_expiry[ge] for ge in sorted(group_expiry)}
+            sorted_group_expiry={ge:group_expiry[ge] for ge in sorted(group_expiry)} # here i am sorting our mapped data based on current expiry dates as in increaing order
 
             month_count={
                 "one":1,
@@ -212,13 +214,13 @@ class FyersCodebase:
                 "three":3,
                 "four":4,
                 "all":len(sorted_group_expiry)
-            }.get(expiry_type,len(sorted_group_expiry))
+            }.get(expiry_type,len(sorted_group_expiry)) # now as per user input we filtered the expiry
             filter_expiry=[]
             for i,(month,data) in enumerate(sorted_group_expiry.items()):
                 if i< month_count:
                     filter_expiry.extend(data)
 
-            dates=[item['date'] for item  in  filter_expiry ]
+            dates=[item['date'] for item  in  filter_expiry ] # returning dates of expiry as per input like ,for one : it return first months data,for two: it return first two months data as on
             return dates
         except Exception as e:
             self.logger.error(f"failed to get expiry dates : {e}")
